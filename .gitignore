@@ -1,0 +1,27 @@
+# --- Python / backend ---
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+env/
+*.egg-info/
+
+# --- Node / frontend ---
+node_modules/
+dist/
+.vite/
+
+# --- Variables de entorno (NUNCA se suben, contienen llaves privadas) ---
+.env
+.env.local
+
+# --- Bases de datos locales ---
+*.db
+*.sqlite3
+
+# --- Editor / SO ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
