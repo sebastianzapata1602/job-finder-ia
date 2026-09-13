@@ -7,9 +7,9 @@ forma de llamar al modelo. Fijate que el "contrato" de esta funcion
 (recibe un string, devuelve un ParsedQuery) no cambio -- por eso el
 resto de la app (main.py) no necesita modificarse en absoluto.
 
-Por que Gemini 2.5 Flash? Es el modelo mas generoso del tier gratuito
-de Google (10 peticiones por minuto, 250 por dia aprox.), suficiente
-para un proyecto de aprendizaje que estas probando tu mismo.
+Por que Gemini 3.6 Flash? Es el modelo actual con tier gratuito de Google
+(rate-limited, pero sin costo ni tarjeta de credito), suficiente para un
+proyecto de aprendizaje que estas probando tu mismo.
 
 Usamos response_mime_type="application/json" en la configuracion --
 esto le pide a Gemini que garantice una salida JSON valida, reduciendo
@@ -57,7 +57,7 @@ def interpret_query(query: str) -> ParsedQuery:
     """
     try:
         response = client.models.generate_content(
-            model="gemini-2.5-flash",
+            model="gemini-3.6-flash",
             contents=query,
             config=types.GenerateContentConfig(
                 system_instruction=SYSTEM_PROMPT,

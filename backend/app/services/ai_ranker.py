@@ -72,7 +72,7 @@ async def rank_and_summarize(
 
     try:
         response = client.models.generate_content(
-            model="gemini-2.5-flash",
+            model="gemini-3.6-flash",
             contents=_build_user_message(offers, parsed_params),
             config=types.GenerateContentConfig(
                 system_instruction=SYSTEM_PROMPT,
@@ -103,7 +103,5 @@ async def rank_and_summarize(
         offers.sort(key=lambda o: o.relevance_score or 0, reverse=True)
         return offers
 
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
+    except Exception:
         return offers
