@@ -16,7 +16,9 @@ import httpx
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.models.schemas import JobOffer, SearchResponse
+from app.models.schemas import JobOffer, ParsedQuery, SearchRequest, SearchResponse
+from app.services.ai_interpreter import interpret_query
+from app.services.ai_ranker import rank_and_summarize
 from app.services.job_sources.arbeitnow import search_arbeitnow
 
 app = FastAPI(title="Job Finder AI")
@@ -75,4 +77,44 @@ async def search_test(q: str = "developer"):
             detail="No se pudo conectar con la fuente de empleos. Intenta de nuevo.",
         )
 
-    return SearchResponse(results=offers, total_found=len(offers))
+    return SearchResponse(
+        parsed_params=ParsedQuery(role=q), results=offers, total_found=len(offers)
+    )
+
+
+@app.post("/api/search", response_model=SearchResponse)
+async def search(request: SearchRequest):
+    """
+    El endpoint real de la app: recibe lenguaje natural, y devuelve
+    ofertas ya interpretadas, buscadas y rankeadas.
+
+    Fijate en el orden: primero interpretamos (paso rapido y barato),
+    despues buscamos en la fuente externa usando el "role" ya limpio
+    (no la frase completa del usuario, que traeria pocos o ningun
+    resultado), y al final rankeamos con el perfil completo. Cada paso
+    depende del anterior -- por eso van en secuencia, no en paralelo.
+    """
+    parsed = interpret_query(request.query)
+
+    # Usamos el rol interpretado como palabra clave de busqueda. Si la IA
+    # no logro extraer un rol, usamos la query cruda como respaldo.
+    search_term = parsed.role or request.query
+
+    try:
+        offers: list[JobOffer] = await search_arbeitnow(search_term)
+    except httpx.HTTPStatusError as exc:
+        raise HTTPException(
+            status_code=502,
+            detail=f"La fuente de empleos no respondio correctamente: {exc.response.status_code}",
+        )
+    except httpx.RequestError:
+        raise HTTPException(
+            status_code=503,
+            detail="No se pudo conectar con la fuente de empleos. Intenta de nuevo.",
+        )
+
+    ranked_offers = await rank_and_summarize(offers, parsed)
+
+    return SearchResponse(
+        parsed_params=parsed, results=ranked_offers, total_found=len(ranked_offers)
+    )

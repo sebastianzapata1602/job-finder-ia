@@ -62,8 +62,14 @@ def interpret_query(query: str) -> ParsedQuery:
             config=types.GenerateContentConfig(
                 system_instruction=SYSTEM_PROMPT,
                 temperature=0,
-                max_output_tokens=300,
+                max_output_tokens=800,
                 response_mime_type="application/json",
+                # Gemini 3 "piensa" antes de responder por defecto, y ese
+                # razonamiento consume parte de max_output_tokens -- para
+                # una tarea simple de extraccion no lo necesitamos, y sin
+                # esto el JSON puede quedar cortado a la mitad.
+                thinking_config=types.ThinkingConfig(thinking_level="minimal"),
+
             ),
         )
         raw_text = response.text.strip()
@@ -76,5 +82,6 @@ def interpret_query(query: str) -> ParsedQuery:
         data = json.loads(raw_text)
         return ParsedQuery(**data)
 
-    except Exception:
+    except Exception as e:
+        print(f"ERROR EN INTERPRETER: {e}")
         return ParsedQuery(role=query)

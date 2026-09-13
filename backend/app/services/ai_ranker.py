@@ -77,8 +77,9 @@ async def rank_and_summarize(
             config=types.GenerateContentConfig(
                 system_instruction=SYSTEM_PROMPT,
                 temperature=0,
-                max_output_tokens=2000,
+                max_output_tokens=4000,
                 response_mime_type="application/json",
+                thinking_config=types.ThinkingConfig(thinking_level="minimal"),
             ),
         )
         raw_text = response.text.strip()
