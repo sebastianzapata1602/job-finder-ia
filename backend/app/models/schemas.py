@@ -36,6 +36,30 @@ class JobOffer(BaseModel):
     salary_range: Optional[str] = None
     salary_disclosed: bool = False
 
+    # Estos dos campos los llena la IA rankeadora, no la fuente externa.
+    # Por eso empiezan en None: una oferta recien traida de Arbeitnow
+    # todavia no ha pasado por el ranking.
+    ai_summary: Optional[str] = None
+    relevance_score: Optional[float] = None
+
+
+class ParsedQuery(BaseModel):
+    """
+    Lo que la IA interprete extrae del texto libre del usuario.
+
+    Todos los campos son Optional porque el usuario puede no mencionar
+    todos -- si alguien escribe solo "diseno grafico", no sabemos su
+    modalidad ni su salario esperado, y eso esta bien.
+    """
+
+    role: Optional[str] = None
+    modality: Optional[str] = None  # remoto / presencial / hibrido
+    region: Optional[str] = None
+    seniority: Optional[str] = None
+    experience_years: Optional[str] = None
+    salary_min: Optional[float] = None
+    salary_currency: Optional[str] = None
+
 
 class SearchRequest(BaseModel):
     """Lo que el usuario envia desde el frontend."""
@@ -46,5 +70,6 @@ class SearchRequest(BaseModel):
 class SearchResponse(BaseModel):
     """Lo que el backend responde al frontend."""
 
+    parsed_params: ParsedQuery
     results: list[JobOffer]
     total_found: int
